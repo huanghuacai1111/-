@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>位置服务与隐私保护应用</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>位置服务与隐私保护应用</h1>
+        <button onclick="getLocation()">获取位置并搜索附近的肯德基</button>
+        <div id="location"></div>
+        <div id="pois"></div>
+        <!-- 用户隐私设置界面 -->
+        <div id="privacy-settings">
+            <h3>隐私设置</h3>
+            <label>
+                <input type="checkbox" id="shareLocation" checked>
+                允许应用访问并使用我的位置数据
+            </label>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
