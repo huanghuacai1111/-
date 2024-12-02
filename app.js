@@ -1,22 +1,27 @@
+const key = CryptoJS.enc.Utf8.parse("1234567890123456");
+const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
+
 function getLocation() {
-    // 使用高德地图API进行定位
+    console.log("getLocation called");
     AMap.plugin('AMap.Geolocation', function() {
+        console.log("AMap plugin loaded");
         var geolocation = new AMap.Geolocation({
-            enableHighAccuracy: true, // 是否使用高精度定位，默认:true
-            timeout: 10000,           // 超过10秒后停止定位，默认：无穷大
-            maximumAge: 0,            // 定位结果缓存0毫秒，默认：0
-            convert: true,            // 自动偏移坐标，偏移后的坐标为高德坐标
-            showButton: true,         // 显示定位按钮，默认：true
-            buttonPosition: 'LB',     // 定位按钮停靠位置，默认：'LB'，左下角
-            buttonOffset: new AMap.Pixel(10, 20), // 定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
-            showMarker: true,         // 定位成功后在定位到的位置显示点标记，默认：true
-            showCircle: true,         // 定位成功后用圆圈表示定位精度范围，默认：true
-            panToLocation: true,      // 定位成功后将定位到的位置作为地图中心点，默认：true
-            zoomToAccuracy: true      // 定位成功后调整地图视野范围使定位位置及精度范围视野内可见，默认：false
+            enableHighAccuracy: true,
+            timeout: 30000, // 增加超时时间到30秒
+            maximumAge: 0,
+            convert: true,
+            showButton: true,
+            buttonPosition: 'LB',
+            buttonOffset: new AMap.Pixel(10, 20),
+            showMarker: true,
+            showCircle: true,
+            panToLocation: true,
+            zoomToAccuracy: true
         });
         geolocation.getCurrentPosition(function(status, result) {
-            if (status == 'complete') {
-                onComplete(result);
+            console.log(`Geolocation status: ${status}`);
+            if (status === 'complete') {
+                showPosition(result); // 在定位成功时调用 showPosition 函数
             } else {
                 onError(result);
             }
@@ -24,27 +29,13 @@ function getLocation() {
     });
 }
 
-function onComplete(data) {
-    const latitude = data.position.lat;
-    const longitude = data.position.lng;
-    console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
-    // 处理加密、显示等逻辑
-}
-
-function onError(data) {
-    alert('定位失败');
-}
-
-
 function showPosition(position) {
     console.log("showPosition called"); // 添加调试日志
-    const latitude = position.coords.latitude;
-    const longitude = position.coords.longitude;
+    const latitude = position.position.lat;  // 适用于高德地图API的结构
+    const longitude = position.position.lng; // 适用于高德地图API的结构
     console.log(`Latitude: ${latitude}, Longitude: ${longitude}`); // 输出位置信息
 
     // Encrypt location data
-    const key = CryptoJS.enc.Utf8.parse("1234567890123456");
-    const iv = CryptoJS.enc.Utf8.parse("1234567890123456");
     const encrypted = CryptoJS.AES.encrypt(
         JSON.stringify({ latitude, longitude }), key, { iv }
     ).toString();
@@ -52,31 +43,19 @@ function showPosition(position) {
 
     document.getElementById("location").innerHTML = `
         Encrypted location: ${encrypted}<br>
-        Decrypted location: ${decryptLocation(encrypted, key, iv)}
+        Decrypted location: ${decryptLocation(encrypted)}
     `;
 
     // Use Amap API to get nearby POIs
     getPOIs(latitude, longitude, "99a8554beacb34262546d455d62d08fc");
 }
 
-function showError(error) {
-    switch(error.code) {
-        case error.PERMISSION_DENIED:
-            alert("User denied the request for Geolocation.");
-            break;
-        case error.POSITION_UNAVAILABLE:
-            alert("Location information is unavailable.");
-            break;
-        case error.TIMEOUT:
-            alert("The request to get user location timed out.");
-            break;
-        case error.UNKNOWN_ERROR:
-            alert("An unknown error occurred.");
-            break;
-    }
+function onError(data) {
+    console.log('定位失败', data);
+    alert(`定位失败：${data.message}`);
 }
 
-function decryptLocation(encrypted, key, iv) {
+function decryptLocation(encrypted) {
     const decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv });
     const decryptedStr = decrypted.toString(CryptoJS.enc.Utf8);
     const location = JSON.parse(decryptedStr);
@@ -104,6 +83,7 @@ function getPOIs(latitude, longitude, apiKey) {
             alert("Error fetching POIs.");
         });
 }
+
 document.getElementById('shareLocation').addEventListener('change', function() {
     if (this.checked) { 
         console.log("用户允许访问位置数据"); 
